@@ -37,7 +37,14 @@ private:
     static inline std::mutex mutex_;
 };
 
-// main UDF
+StringVal MakeStringVal(FunctionContext* context, const std::string& s) {
+    if (s.empty()) return StringVal::null();  // 또는 빈 문자열 반환도 가능
+    uint8_t* buffer = context->Allocate(s.size());
+    if (buffer == nullptr) return StringVal::null();  // 할당 실패
+    memcpy(buffer, s.data(), s.size());
+    return StringVal(buffer, s.size());
+}
+
 StringVal mask(FunctionContext* context,
                const StringVal& key,
                const StringVal& input,
@@ -49,7 +56,6 @@ StringVal mask(FunctionContext* context,
     std::string mask_str(reinterpret_cast<const char*>(mask_val.ptr), mask_val.len);
 
     if (mask_str.length() != 1) return StringVal::null();  // 단일 문자만 허용
-
     char mask_char = mask_str[0];
 
     const std::regex* pattern = RegexCache::GetRegex(key_str);
@@ -62,15 +68,10 @@ StringVal mask(FunctionContext* context,
     for (; it != end; ++it) {
         size_t start = it->position();
         size_t len = it->length();
-        for (size_t i = 0; i < len; ++i) {
+        for (size_t i = 0; i < len && (start + i < result.size()); ++i) {
             result[start + i] = mask_char;
         }
     }
 
-    StringVal out(context->Allocate(result.size()));
-    if (!out.ptr) return StringVal::null();
-
-    memcpy(out.ptr, result.data(), result.size());
-    out.len = result.size();
-    return out;
+    return MakeStringVal(context, result);  // 안전한 메모리 반환
 }
