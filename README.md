@@ -10,11 +10,6 @@ yum install boost-devel
 
 ```
 g++ -shared -fPIC -o libregexmask.so RegexMaskingUdf.cc -I /opt/cloudera/parcels/CDH/include
-
-clang++ -std=c++17 -O3 -emit-llvm -c RegexMaskingUdf.cc -o RegexMaskingUdf.bc -I /opt/cloudera/parcels/CDH/include
-
-clang++ -std=c++17 -O3 -emit-llvm -c CachedRegexMaskingUdf.cc -o CachedRegexMaskingUdf.bc  -I /opt/cloudera/parcels/CDH/include -I /usr/include -licuuc -licuio -licui18n
-
 ```
 
 ## Registration
